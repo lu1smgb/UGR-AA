@@ -1,0 +1,13 @@
+*.pdf
+*.aux
+*.fdb_latexmk
+*.fls
+*.log
+*.synctex.gz
+*.toc
+*.zip
+b0.py
+entrega
+DigitosZip
+*.rar
+funciones_utils.py
