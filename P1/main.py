@@ -561,7 +561,7 @@ def ej22():
 def main():
     
     # # ***  EJERCICIO 1.2  *** #
-    """ ej12()
+    ej12()
 
     # # *** EJERCICIO 1.3 A *** #
     ej13a(0.01)
@@ -571,7 +571,7 @@ def main():
     ej13b()
 
     # ***  EJERCICIO 2.1    *** #
-    ej21() """
+    ej21()
 
     # ***  EJERCICIO 2.2    *** #
     ej22()
