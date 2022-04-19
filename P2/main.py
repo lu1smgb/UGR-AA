@@ -5,9 +5,10 @@ Nombre Estudiante: Luis Miguel Guirado Bautista
 """
 import numpy as np
 import matplotlib.pyplot as plt
+from sys import exit
 
 # Fijamos la semilla
-np.random.seed(0)
+np.random.seed(1)
 
 def simula_unif(N, dim, rango):
 	return np.random.uniform(rango[0],rango[1],(N,dim))
@@ -42,12 +43,15 @@ def simula_recta(intervalo):
 # ***** Primera grafica ****************************************
 x = simula_unif(50, 2, [-50,50])
 #CODIGO DEL ESTUDIANTE
+print("Distribución uniforme")
 plt.scatter(x[:,0], x[:,1])
 plt.show()
 # **************************************************************
+input("\n--- Pulsar tecla para continuar ---\n")
 # ***** Segunda grafica ****************************************
 x = simula_gauss(50, 2, np.array([5,7]))
 #CODIGO DEL ESTUDIANTE
+print("Distribución Gaussiana")
 plt.scatter(x[:,0], x[:,1])
 plt.show()
 # **************************************************************
@@ -79,14 +83,18 @@ def f(x, y, a, b):
 
 #CODIGO DEL ESTUDIANTE
 
+print("Clasificacion sin ruido")
 # ***** Apartado A (clasificacion sin ruido) *******************
 # Generamos la muestra
 x = simula_unif(100, 2, [-50,50])
+
 # Coeficientes de la recta
 a, b = simula_recta([-50,50])
+
 # Etiquetas
 y = np.array([f(x_, y_, a, b) for (x_, y_) in x], dtype=float)
 plt.scatter(x[:,0], x[:,1], c=y)
+
 # Puntos para representar la recta en el plot
 x_ = np.linspace(-60,60,10)
 plt.plot(x_, a*x_ + b, 'C0')
@@ -115,17 +123,27 @@ input("\n--- Pulsar tecla para continuar ---\n")
 # Array con 10% de indices aleatorios para introducir ruido
 
 #CODIGO DEL ESTUDIANTE
+print("Clasificacion con ruido")
 # ***** Apartado B (clasificacion con 10% de ruido en ambas etiquetas) ************
-# ! A partir de "funciones_utils.py"
 tasa_ruido = 0.1
-positivos = np.random.choice(y[y==1].size, size=int(y[y==1].size*tasa_ruido), replace=False)
-negativos = np.random.choice(y[y==-1].size, size=int(y[y==-1].size*tasa_ruido), replace=False)
-#print(f"{int(tasa_ruido*100)}% de {y[y==-1].size} negativos = {int(y[y==-1].size*tasa_ruido)}", negativos)
-#print(f"{int(tasa_ruido*100)}% de {y[y==1].size} positivos = {int(y[y==1].size*tasa_ruido)}", positivos)
-ruido = list( np.concatenate((positivos, negativos)) )
+
+positivos = [i for i,_ in enumerate(y) if y[i]==1]
+negativos = [i for i,_ in enumerate(y) if y[i]==-1]
+
+ruido_pos = np.random.choice(positivos, 
+                             size=round(y[y==1].size*tasa_ruido),
+                             replace=False)
+
+ruido_neg = np.random.choice(negativos,
+                             size=round(y[y==-1].size*tasa_ruido),
+                             replace=False)
+
+ruido = np.concatenate((ruido_pos, ruido_neg))
 y[ruido] *= -1
-#print(f"{int(tasa_ruido*100)}% de {y[y==-1].size} negativos = {int(y[y==-1].size*tasa_ruido)}", negativos)
-#print(f"{int(tasa_ruido*100)}% de {y[y==1].size} positivos = {int(y[y==1].size*tasa_ruido)}", positivos)
+
+print(f"Tasa de ruido en ambas etiquetas: {round(tasa_ruido*100)} %")
+print(f"Tasa de positivos {y[y==1].size} %\nPuntos de ruido positivos {round(y[y==1].size*tasa_ruido)}")
+print(f"Tasa de negativos {y[y==-1].size} %\nPuntos de ruido negativos {round(y[y==-1].size*tasa_ruido)}")
 
 # Mostramos la grafica
 plt.scatter(x[:,0], x[:,1], c=y)
@@ -135,6 +153,8 @@ plt.ylim(-55,55)
 plt.show()
 # **************************************************************
 input("\n--- Pulsar tecla para continuar ---\n")
+
+exit()
 
 ###############################################################################
 ###############################################################################
@@ -190,10 +210,6 @@ def f3(x, y):
 
 def f4(x, y):
     return y - 20*(x**2) - 5*x + 3
-
-plot_datos_cuad(x, y, )
-
-
 
 exit()
 
