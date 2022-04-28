@@ -45,6 +45,7 @@ x = simula_unif(50, 2, [-50,50])
 #CODIGO DEL ESTUDIANTE
 print("Distribución uniforme")
 plt.scatter(x[:,0], x[:,1])
+plt.title('Distribución uniforme de 50 puntos sobre [-50,50]')
 plt.show()
 # **************************************************************
 input("\n--- Pulsar tecla para continuar ---\n")
@@ -53,6 +54,7 @@ x = simula_gauss(50, 2, np.array([5,7]))
 #CODIGO DEL ESTUDIANTE
 print("Distribución Gaussiana")
 plt.scatter(x[:,0], x[:,1])
+plt.title('Distribución gaussiana de 50 puntos con $\sigma_x = 5$ y $\sigma_y = 7$')
 plt.show()
 # **************************************************************
 
@@ -92,14 +94,15 @@ x = simula_unif(100, 2, [-50,50])
 a, b = simula_recta([-50,50])
 
 # Etiquetas
-y = np.array([f(x_, y_, a, b) for (x_, y_) in x], dtype=float)
+y = np.array([f(xi, yi, a, b) for (xi, yi) in x], dtype=float)
 plt.scatter(x[:,0], x[:,1], c=y)
 
 # Puntos para representar la recta en el plot
-x_ = np.linspace(-60,60,10)
+x_ = np.linspace(-60,60,x.shape[0])
 plt.plot(x_, a*x_ + b, 'C0')
 plt.xlim(-55,55)
 plt.ylim(-55,55)
+plt.title('Clasificacion perfecta de 100 puntos según $f(x,y)=y-a \cdot x - b$')
 plt.show()
 # **************************************************************
 
@@ -124,22 +127,31 @@ input("\n--- Pulsar tecla para continuar ---\n")
 
 #CODIGO DEL ESTUDIANTE
 print("Clasificacion con ruido")
-# ***** Apartado B (clasificacion con 10% de ruido en ambas etiquetas) ************
+# ***** Apartado B (clasificacion con 10% de ruido en ambas etiquetas) ********
+def generar_ruido(y, tasa_ruido):
+    positivos = [i for i,_ in enumerate(y) if y[i]==1]
+    negativos = [i for i,_ in enumerate(y) if y[i]==-1]
+
+    ruido_pos = np.random.choice(positivos, 
+                                 size=round(y[y==1].size*tasa_ruido),
+                                 replace=False)
+
+    ruido_neg = np.random.choice(negativos,
+                                 size=round(y[y==-1].size*tasa_ruido),
+                                 replace=False)
+
+    ruido = np.concatenate((ruido_pos, ruido_neg))
+    ruido = np.array(ruido, dtype=int)
+
+    if ruido.size > 0:
+        y[ruido] *= -1
+# *****************************************************************************
 tasa_ruido = 0.1
 
-positivos = [i for i,_ in enumerate(y) if y[i]==1]
-negativos = [i for i,_ in enumerate(y) if y[i]==-1]
+generar_ruido(y, tasa_ruido)
 
-ruido_pos = np.random.choice(positivos, 
-                             size=round(y[y==1].size*tasa_ruido),
-                             replace=False)
-
-ruido_neg = np.random.choice(negativos,
-                             size=round(y[y==-1].size*tasa_ruido),
-                             replace=False)
-
-ruido = np.concatenate((ruido_pos, ruido_neg))
-y[ruido] *= -1
+# Para el ejercicio 2
+y_ruido = y.copy()
 
 print(f"Tasa de ruido en ambas etiquetas: {round(tasa_ruido*100)} %")
 print(f"Tasa de positivos {y[y==1].size} %\nPuntos de ruido positivos {round(y[y==1].size*tasa_ruido)}")
@@ -150,11 +162,10 @@ plt.scatter(x[:,0], x[:,1], c=y)
 plt.plot(x_, a*x_ + b, 'C0')
 plt.xlim(-55,55)
 plt.ylim(-55,55)
+plt.title(f'Clasificacion con {round(tasa_ruido*100)}% de ruido de 100 puntos según $f(x,y)=y-a \cdot x - b$')
 plt.show()
 # **************************************************************
 input("\n--- Pulsar tecla para continuar ---\n")
-
-exit()
 
 ###############################################################################
 ###############################################################################
@@ -162,39 +173,41 @@ exit()
 
 # EJERCICIO 1.3: Supongamos ahora que las siguientes funciones definen la frontera de clasificación de los puntos de la muestra en lugar de una recta
 
-def plot_datos_cuad(X, y, fz, title='Point cloud plot', xaxis='x axis', yaxis='y axis'):
-    #Preparar datos
-    min_xy = X.min(axis=0)
-    max_xy = X.max(axis=0)
-    border_xy = (max_xy-min_xy)*0.01
-    
-    #Generar grid de predicciones
-    xx, yy = np.mgrid[min_xy[0]-border_xy[0]:max_xy[0]+border_xy[0]+0.001:border_xy[0], 
-                      min_xy[1]-border_xy[1]:max_xy[1]+border_xy[1]+0.001:border_xy[1]]
-    grid = np.c_[xx.ravel(), yy.ravel(), np.ones_like(xx).ravel()]
-    pred_y = fz(grid)
-    # pred_y[(pred_y>-1) & (pred_y<1)]
-    pred_y = np.clip(pred_y, -1, 1).reshape(xx.shape)
-    
-    #Plot
-    f, ax = plt.subplots(figsize=(8, 6))
-    contour = ax.contourf(xx, yy, pred_y, 50, cmap='RdBu',vmin=-1, vmax=1)
-    ax_c = f.colorbar(contour)
-    ax_c.set_label('$f(x, y)$')
-    ax_c.set_ticks([-1, -0.75, -0.5, -0.25, 0, 0.25, 0.5, 0.75, 1])
-    ax.scatter(X[:, 0], X[:, 1], c=y, s=50, linewidth=2, 
-                cmap="RdYlBu", edgecolor='white')
-    
-    XX, YY = np.meshgrid(np.linspace(round(min(min_xy)), round(max(max_xy)),X.shape[0]),np.linspace(round(min(min_xy)), round(max(max_xy)),X.shape[0]))
-    positions = np.vstack([XX.ravel(), YY.ravel()])
-    ax.contour(XX,YY,fz(positions.T).reshape(X.shape[0],X.shape[0]),[0], colors='black')
-    
-    ax.set(
-       xlim=(min_xy[0]-border_xy[0], max_xy[0]+border_xy[0]), 
-       ylim=(min_xy[1]-border_xy[1], max_xy[1]+border_xy[1]),
-       xlabel=xaxis, ylabel=yaxis)
-    plt.title(title)
-    plt.show()
+# =============================================================================
+# def plot_datos_cuad(X, y, fz, title='Point cloud plot', xaxis='x axis', yaxis='y axis'):
+#     #Preparar datos
+#     min_xy = X.min(axis=0)
+#     max_xy = X.max(axis=0)
+#     border_xy = (max_xy-min_xy)*0.01
+#     
+#     #Generar grid de predicciones
+#     xx, yy = np.mgrid[min_xy[0]-border_xy[0]:max_xy[0]+border_xy[0]+0.001:border_xy[0], 
+#                       min_xy[1]-border_xy[1]:max_xy[1]+border_xy[1]+0.001:border_xy[1]]
+#     grid = np.c_[xx.ravel(), yy.ravel(), np.ones_like(xx).ravel()]
+#     pred_y = fz(grid)
+#     # pred_y[(pred_y>-1) & (pred_y<1)]
+#     pred_y = np.clip(pred_y, -1, 1).reshape(xx.shape)
+#     
+#     #Plot
+#     f, ax = plt.subplots(figsize=(8, 6))
+#     contour = ax.contourf(xx, yy, pred_y, 50, cmap='RdBu',vmin=-1, vmax=1)
+#     ax_c = f.colorbar(contour)
+#     ax_c.set_label('$f(x, y)$')
+#     ax_c.set_ticks([-1, -0.75, -0.5, -0.25, 0, 0.25, 0.5, 0.75, 1])
+#     ax.scatter(X[:, 0], X[:, 1], c=y, s=50, linewidth=2, 
+#                 cmap="RdYlBu", edgecolor='white')
+#     
+#     XX, YY = np.meshgrid(np.linspace(round(min(min_xy)), round(max(max_xy)),X.shape[0]),np.linspace(round(min(min_xy)), round(max(max_xy)),X.shape[0]))
+#     positions = np.vstack([XX.ravel(), YY.ravel()])
+#     ax.contour(XX,YY,fz(positions.T).reshape(X.shape[0],X.shape[0]),[0], colors='black')
+#     
+#     ax.set(
+#        xlim=(min_xy[0]-border_xy[0], max_xy[0]+border_xy[0]), 
+#        ylim=(min_xy[1]-border_xy[1], max_xy[1]+border_xy[1]),
+#        xlabel=xaxis, ylabel=yaxis)
+#     plt.title(title)
+#     plt.show()
+# =============================================================================
     
     
 #CODIGO DEL ESTUDIANTE
@@ -211,7 +224,72 @@ def f3(x, y):
 def f4(x, y):
     return y - 20*(x**2) - 5*x + 3
 
-exit()
+print('Clasificacion sin ruido con funciones no lineales')
+fig, axs = plt.subplots(2,2)
+fig.set_size_inches((12,8))
+X, Y = np.meshgrid(np.arange(-55, 55, 1), np.arange(-55, 55, 1))
+
+y = np.array([signo(f1(xi, yi)) for (xi, yi) in x], dtype=float)
+axs[0, 0].scatter(x[:, 0], x[:, 1], c=y)
+axs[0, 0].contour(X, Y, f1(X, Y), 0)
+axs[0, 0].set_title(
+	f'Clasificacion perfecta con $f_1$')
+
+y = np.array([signo(f2(xi, yi)) for (xi, yi) in x], dtype=float)
+axs[0, 1].scatter(x[:, 0], x[:, 1], c=y)
+axs[0, 1].contour(X, Y, f2(X, Y), 0)
+axs[0, 1].set_title(
+	f'Clasificacion perfecta con $f_2$')
+
+y = np.array([signo(f3(xi, yi)) for (xi, yi) in x], dtype=float)
+axs[1, 0].scatter(x[:, 0], x[:, 1], c=y)
+axs[1, 0].contour(X, Y, f3(X, Y), 0)
+axs[1, 0].set_title(
+    f'Clasificacion perfecta con $f_3$')
+
+y = np.array([signo(f4(xi, yi)) for (xi, yi) in x], dtype=float)
+axs[1, 1].scatter(x[:, 0], x[:, 1], c=y)
+axs[1, 1].contour(X, Y, f4(X, Y), 0)
+axs[1, 1].set_title(
+	f'Clasificacion perfecta con $f_4$')
+
+plt.show()
+
+input("\n--- Pulsar tecla para continuar ---\n")
+
+print('Clasificacion con ruido con funciones no lineales')
+fig, axs = plt.subplots(2,2)
+fig.set_size_inches((12,8))
+
+y = np.array([signo(f1(xi, yi)) for (xi, yi) in x], dtype=float)
+generar_ruido(y,tasa_ruido)
+axs[0, 0].scatter(x[:, 0], x[:, 1], c=y)
+axs[0, 0].contour(X, Y, f1(X, Y), 0)
+axs[0, 0].set_title(
+	f'Clasificacion ruidosa con $f_1$')
+
+y = np.array([signo(f2(xi, yi)) for (xi, yi) in x], dtype=float)
+generar_ruido(y,tasa_ruido)
+axs[0, 1].scatter(x[:, 0], x[:, 1], c=y)
+axs[0, 1].contour(X, Y, f2(X, Y), 0)
+axs[0, 1].set_title(
+	f'Clasificacion ruidosa con $f_2$')
+
+y = np.array([signo(f3(xi, yi)) for (xi, yi) in x], dtype=float)
+generar_ruido(y,tasa_ruido)
+axs[1, 0].scatter(x[:, 0], x[:, 1], c=y)
+axs[1, 0].contour(X, Y, f3(X, Y), 0)
+axs[1, 0].set_title(
+    f'Clasificacion ruidosa con $f_3$')
+
+y = np.array([signo(f4(xi, yi)) for (xi, yi) in x], dtype=float)
+generar_ruido(y,tasa_ruido)
+axs[1, 1].scatter(x[:, 0], x[:, 1], c=y)
+axs[1, 1].contour(X, Y, f4(X, Y), 0)
+axs[1, 1].set_title(
+	f'Clasificacion ruidosa con $f_4$')
+
+plt.show()
 
 input("\n--- Pulsar tecla para continuar ---\n")
 
@@ -221,25 +299,42 @@ input("\n--- Pulsar tecla para continuar ---\n")
 
 # EJERCICIO 2.1: ALGORITMO PERCEPTRON
 
-def ajusta_PLA(datos, label, max_iter, vini):
+def ajusta_PLA(datos: np.array, label: np.array, max_iter, vini: np.ndarray):
     #CODIGO DEL ESTUDIANTE
-    
-    return 0 
+    assert vini.shape in [(3,),(1,3)]
+    w = vini
+    iters = 0
+    datos_ = np.insert(datos, 0, np.ones(x.shape[0]), axis=1)
+    cambios = True # Para entrar en el bucle
+    while cambios and iters < max_iter:
+        cambios = False
+        for idx,xi in enumerate(datos_):
+            iters += 1
+            if signo(w.dot(xi)) != label[idx]:
+                w = w + xi*label[idx]
+                cambios = True
+    return w, iters
 
 #CODIGO DEL ESTUDIANTE
-
-
-
-
-
+MAX_ITERS = 50_000
+# Recuperamos las etiquetas del ejercicio 1.2.a
+y = np.array([f(xi, yi, a, b) for (xi, yi) in x], dtype=float)
+print('Algoritmo PLA con vector 0')
+pesos, iters = ajusta_PLA(x, y, MAX_ITERS, np.zeros(3, dtype=int))
+print(pesos, iters, '\n')
 
 # Random initializations
+print('Algoritmo PLA con vectores aleatorios')
 iterations = []
 for i in range(0,10):
     #CODIGO DEL ESTUDIANTE
-    pass
-    
-    
+    wini = np.random.sample(3)
+    pesos, iters = ajusta_PLA(x, y, MAX_ITERS, wini)
+    print(f'\t--- Iteración {i+1} ---')
+    print(f'Pesos iniciales: {wini}')
+    print(f'Pesos finales: {pesos}')
+    print(f'Iteraciones empleadas: {iters}')
+    iterations.append(iters)
     
 print('Valor medio de iteraciones necesario para converger: {}'.format(np.mean(np.asarray(iterations))))
 
@@ -248,9 +343,25 @@ input("\n--- Pulsar tecla para continuar ---\n")
 # Ahora con los datos del ejercicio 1.2.b
 
 #CODIGO DEL ESTUDIANTE
+print('\t***** Ahora con ruido *****')
+print('Algoritmo PLA con vector 0')
+pesos, iters = ajusta_PLA(x, y_ruido, 500_000, np.zeros(3, dtype=int))
+print(pesos, iters, '\n')
 
-
-
+# Random initializations
+print('Algoritmo PLA con vectores aleatorios')
+iterations = []
+for i in range(0,10):
+    #CODIGO DEL ESTUDIANTE
+    wini = np.random.sample(3)
+    pesos, iters = ajusta_PLA(x, y_ruido, MAX_ITERS, wini)
+    print(f'Iteración {i+1}')
+    print(f'Pesos iniciales: {wini}')
+    print(f'Pesos finales: {pesos}')
+    print(f'Iteraciones empleadas: {iters}')
+    iterations.append(iters)
+    
+print('Valor medio de iteraciones necesario para converger: {}'.format(np.mean(np.asarray(iterations))))
 
 input("\n--- Pulsar tecla para continuar ---\n")
 
@@ -260,6 +371,7 @@ input("\n--- Pulsar tecla para continuar ---\n")
 
 # EJERCICIO 3: REGRESIÓN LOGÍSTICA CON STOCHASTIC GRADIENT DESCENT
 
+exit()
 def sgdRL():
     #CODIGO DEL ESTUDIANTE
 
