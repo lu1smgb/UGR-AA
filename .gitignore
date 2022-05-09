@@ -11,3 +11,4 @@ entrega
 DigitosZip
 *.rar
 funciones_utils.py
+!informe.pdf
