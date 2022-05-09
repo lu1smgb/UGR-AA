@@ -44,7 +44,7 @@ def simula_recta(intervalo):
 x = simula_unif(50, 2, [-50,50])
 #CODIGO DEL ESTUDIANTE
 print("Distribución uniforme")
-plt.scatter(x[:,0], x[:,1])
+plt.scatter(x[:,0], x[:,1], cmap='coolwarm')
 plt.title('Distribución uniforme de 50 puntos sobre [-50,50]')
 plt.show()
 # **************************************************************
@@ -53,7 +53,7 @@ input("\n--- Pulsar tecla para continuar ---\n")
 x = simula_gauss(50, 2, np.array([5,7]))
 #CODIGO DEL ESTUDIANTE
 print("Distribución Gaussiana")
-plt.scatter(x[:,0], x[:,1])
+plt.scatter(x[:,0], x[:,1], cmap='coolwarm')
 plt.title('Distribución gaussiana de 50 puntos con $\sigma_x = 5$ y $\sigma_y = 7$')
 plt.show()
 # **************************************************************
@@ -95,30 +95,18 @@ a, b = simula_recta([-50,50])
 
 # Etiquetas
 y = np.array([f(xi, yi, a, b) for (xi, yi) in x], dtype=float)
-plt.scatter(x[:,0], x[:,1], c=y)
+print(f'Tasa de positivos {y[y==1].size} %')
+print(f'Tasa de negativos {y[y==-1].size} %')
 
 # Puntos para representar la recta en el plot
+plt.scatter(x[:,0], x[:,1], c=y, cmap='coolwarm')
 x_ = np.linspace(-60,60,x.shape[0])
-plt.plot(x_, a*x_ + b, 'C0')
+plt.plot(x_, a*x_ + b, 'k')
 plt.xlim(-55,55)
 plt.ylim(-55,55)
 plt.title('Clasificacion perfecta de 100 puntos según $f(x,y)=y-a \cdot x - b$')
 plt.show()
 # **************************************************************
-
-# ! APUNTES PLA (BORRAR)
-"""
-    ||w||·||alpha||·cos ang.
-    cos ang. determina signo
-    
-    PAGINA 12
-    w^(t) son los pesos al final de una epoca
-    Una epoca son todos los resultados del
-    perceptron al haber pasado por todos los datos
-    
-    POCKET es PLA pero guardando solo lo
-    que tiene minimo error (pag 22)
-"""
 
 input("\n--- Pulsar tecla para continuar ---\n")
 
@@ -148,18 +136,19 @@ def generar_ruido(y, tasa_ruido):
 # *****************************************************************************
 tasa_ruido = 0.1
 
-generar_ruido(y, tasa_ruido)
+# Generamos ruido
+print(f'Puntos de ruido positivos {round(y[y==1].size*tasa_ruido)}')
+print(f'Puntos de ruido negativos {round(y[y==-1].size*tasa_ruido)}')
+generar_ruido(y,tasa_ruido)
+print(f"Tasa de positivos {y[y==1].size} %")
+print(f"Tasa de negativos {y[y==-1].size} %")
 
 # Para el ejercicio 2
 y_ruido = y.copy()
 
-print(f"Tasa de ruido en ambas etiquetas: {round(tasa_ruido*100)} %")
-print(f"Tasa de positivos {y[y==1].size} %\nPuntos de ruido positivos {round(y[y==1].size*tasa_ruido)}")
-print(f"Tasa de negativos {y[y==-1].size} %\nPuntos de ruido negativos {round(y[y==-1].size*tasa_ruido)}")
-
 # Mostramos la grafica
-plt.scatter(x[:,0], x[:,1], c=y)
-plt.plot(x_, a*x_ + b, 'C0')
+plt.scatter(x[:,0], x[:,1], c=y, cmap='coolwarm')
+plt.plot(x_, a*x_ + b, 'k')
 plt.xlim(-55,55)
 plt.ylim(-55,55)
 plt.title(f'Clasificacion con {round(tasa_ruido*100)}% de ruido de 100 puntos según $f(x,y)=y-a \cdot x - b$')
@@ -212,6 +201,7 @@ input("\n--- Pulsar tecla para continuar ---\n")
     
 #CODIGO DEL ESTUDIANTE
 
+# Fronteras complejas del ejercicio 1.2.c
 def f1(x, y):
     return (x-10)**2 + (y-20)**2 - 400
 
@@ -224,70 +214,118 @@ def f3(x, y):
 def f4(x, y):
     return y - 20*(x**2) - 5*x + 3
 
-print('Clasificacion sin ruido con funciones no lineales')
+print('Funciones no lineales (clasificacion de la recta)')
 fig, axs = plt.subplots(2,2)
 fig.set_size_inches((12,8))
 X, Y = np.meshgrid(np.arange(-55, 55, 1), np.arange(-55, 55, 1))
 
-y = np.array([signo(f1(xi, yi)) for (xi, yi) in x], dtype=float)
-axs[0, 0].scatter(x[:, 0], x[:, 1], c=y)
-axs[0, 0].contour(X, Y, f1(X, Y), 0)
+# f1"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+axs[0, 0].scatter(x[:, 0], x[:, 1], c=y, cmap='coolwarm')
+axs[0, 0].contour(X, Y, f1(X, Y), 0, colors='k')
 axs[0, 0].set_title(
-	f'Clasificacion perfecta con $f_1$')
-
-y = np.array([signo(f2(xi, yi)) for (xi, yi) in x], dtype=float)
-axs[0, 1].scatter(x[:, 0], x[:, 1], c=y)
-axs[0, 1].contour(X, Y, f2(X, Y), 0)
+	'Primera clasificacion con $f_1$')
+suma = 0
+# Error de la muestra
+suma = 0
+for i in range(x.shape[0]):
+    # 1_sign(w*x_i) != y_i
+    if signo(f1(x[i,0], x[i,1])) != y[i]: suma += 1
+suma /= x.shape[0]
+print(f'Error obtenido en f1: {suma}')
+# f2"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+axs[0, 1].scatter(x[:, 0], x[:, 1], c=y, cmap='coolwarm')
+axs[0, 1].contour(X, Y, f2(X, Y), 0, colors='k')
 axs[0, 1].set_title(
-	f'Clasificacion perfecta con $f_2$')
-
-y = np.array([signo(f3(xi, yi)) for (xi, yi) in x], dtype=float)
-axs[1, 0].scatter(x[:, 0], x[:, 1], c=y)
-axs[1, 0].contour(X, Y, f3(X, Y), 0)
+	'Primera clasificacion con $f_2$')
+# Error de la muestra
+suma = 0
+for i in range(x.shape[0]):
+    # 1_sign(w*x_i) != y_i
+    if signo(f2(x[i,0], x[i,1])) != y[i]: suma += 1
+suma /= x.shape[0]
+print(f'Error obtenido en f2: {suma}')
+# f3"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+axs[1, 0].scatter(x[:, 0], x[:, 1], c=y, cmap='coolwarm')
+axs[1, 0].contour(X, Y, f3(X, Y), 0, colors='k')
 axs[1, 0].set_title(
-    f'Clasificacion perfecta con $f_3$')
-
-y = np.array([signo(f4(xi, yi)) for (xi, yi) in x], dtype=float)
-axs[1, 1].scatter(x[:, 0], x[:, 1], c=y)
-axs[1, 1].contour(X, Y, f4(X, Y), 0)
+    'Primera clasificacion con $f_3$')
+# Error de la muestra
+suma = 0
+for i in range(x.shape[0]):
+    # 1_sign(w*x_i) != y_i
+    if signo(f3(x[i,0], x[i,1])) != y[i]: suma += 1
+suma /= x.shape[0]
+print(f'Error obtenido en f3: {suma}')
+# f4"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+axs[1, 1].scatter(x[:, 0], x[:, 1], c=y, cmap='coolwarm')
+axs[1, 1].contour(X, Y, f4(X, Y), 0, colors='k')
 axs[1, 1].set_title(
-	f'Clasificacion perfecta con $f_4$')
+	'Primera clasificacion con $f_4$')
+# Error de la muestra
+suma = 0
+for i in range(x.shape[0]):
+    # 1_sign(w*x_i) != y_i
+    if signo(f4(x[i,0], x[i,1])) != y[i]: suma += 1
+suma /= x.shape[0]
+print(f'Error obtenido en f4: {suma}')
+# """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 
 plt.show()
 
 input("\n--- Pulsar tecla para continuar ---\n")
 
+# """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+# """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+# """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+
 print('Clasificacion con ruido con funciones no lineales')
 fig, axs = plt.subplots(2,2)
 fig.set_size_inches((12,8))
 
+# f1"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 y = np.array([signo(f1(xi, yi)) for (xi, yi) in x], dtype=float)
+print(f'Puntos de ruido positivos {round(y[y==1].size*tasa_ruido)}')
+print(f'Puntos de ruido negativos {round(y[y==-1].size*tasa_ruido)}')
 generar_ruido(y,tasa_ruido)
-axs[0, 0].scatter(x[:, 0], x[:, 1], c=y)
-axs[0, 0].contour(X, Y, f1(X, Y), 0)
+print(f"Tasa de positivos {y[y==1].size} %")
+print(f"Tasa de negativos {y[y==-1].size} %")
+axs[0, 0].scatter(x[:, 0], x[:, 1], c=y, cmap='coolwarm')
+axs[0, 0].contour(X, Y, f1(X, Y), 0, colors='k')
 axs[0, 0].set_title(
-	f'Clasificacion ruidosa con $f_1$')
-
+	'Segunda clasificacion con $f_1$')
+# f2"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 y = np.array([signo(f2(xi, yi)) for (xi, yi) in x], dtype=float)
+print(f'Puntos de ruido positivos {round(y[y==1].size*tasa_ruido)}')
+print(f'Puntos de ruido negativos {round(y[y==-1].size*tasa_ruido)}')
 generar_ruido(y,tasa_ruido)
-axs[0, 1].scatter(x[:, 0], x[:, 1], c=y)
-axs[0, 1].contour(X, Y, f2(X, Y), 0)
+print(f"Tasa de positivos {y[y==1].size} %")
+print(f"Tasa de negativos {y[y==-1].size} %")
+axs[0, 1].scatter(x[:, 0], x[:, 1], c=y, cmap='coolwarm')
+axs[0, 1].contour(X, Y, f2(X, Y), 0, colors='k')
 axs[0, 1].set_title(
-	f'Clasificacion ruidosa con $f_2$')
-
+	'Segunda clasificacion con $f_2$')
+# f3"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 y = np.array([signo(f3(xi, yi)) for (xi, yi) in x], dtype=float)
+print(f'Puntos de ruido positivos {round(y[y==1].size*tasa_ruido)}')
+print(f'Puntos de ruido negativos {round(y[y==-1].size*tasa_ruido)}')
 generar_ruido(y,tasa_ruido)
-axs[1, 0].scatter(x[:, 0], x[:, 1], c=y)
-axs[1, 0].contour(X, Y, f3(X, Y), 0)
+print(f"Tasa de positivos {y[y==1].size} %")
+print(f"Tasa de negativos {y[y==-1].size} %")
+axs[1, 0].scatter(x[:, 0], x[:, 1], c=y, cmap='coolwarm')
+axs[1, 0].contour(X, Y, f3(X, Y), 0, colors='k')
 axs[1, 0].set_title(
-    f'Clasificacion ruidosa con $f_3$')
-
+    'Segunda clasificacion con $f_3$')
+# f4"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 y = np.array([signo(f4(xi, yi)) for (xi, yi) in x], dtype=float)
+print(f'Puntos de ruido positivos {round(y[y==1].size*tasa_ruido)}')
+print(f'Puntos de ruido negativos {round(y[y==-1].size*tasa_ruido)}')
 generar_ruido(y,tasa_ruido)
-axs[1, 1].scatter(x[:, 0], x[:, 1], c=y)
-axs[1, 1].contour(X, Y, f4(X, Y), 0)
+print(f"Tasa de positivos {y[y==1].size} %")
+print(f"Tasa de negativos {y[y==-1].size} %")
+axs[1, 1].scatter(x[:, 0], x[:, 1], c=y, cmap='coolwarm')
+axs[1, 1].contour(X, Y, f4(X, Y), 0, colors='k')
 axs[1, 1].set_title(
-	f'Clasificacion ruidosa con $f_4$')
+	'Segunda clasificacion con $f_4$')
 
 plt.show()
 
@@ -299,29 +337,38 @@ input("\n--- Pulsar tecla para continuar ---\n")
 
 # EJERCICIO 2.1: ALGORITMO PERCEPTRON
 
+# Algoritmo
 def ajusta_PLA(datos: np.array, label: np.array, max_iter, vini: np.ndarray):
     #CODIGO DEL ESTUDIANTE
     assert vini.shape in [(3,),(1,3)]
     w = vini
     iters = 0
+    # Insertamos la coordenada artificial 0
     datos_ = np.insert(datos, 0, np.ones(x.shape[0]), axis=1)
     cambios = True # Para entrar en el bucle
     while cambios and iters < max_iter:
         cambios = False
+        iters += 1
         for idx,xi in enumerate(datos_):
-            iters += 1
             if signo(w.dot(xi)) != label[idx]:
                 w = w + xi*label[idx]
                 cambios = True
     return w, iters
 
 #CODIGO DEL ESTUDIANTE
-MAX_ITERS = 50_000
+MAX_ITERS = 1000
 # Recuperamos las etiquetas del ejercicio 1.2.a
 y = np.array([f(xi, yi, a, b) for (xi, yi) in x], dtype=float)
 print('Algoritmo PLA con vector 0')
 pesos, iters = ajusta_PLA(x, y, MAX_ITERS, np.zeros(3, dtype=int))
-print(pesos, iters, '\n')
+print(pesos, iters)
+# Error de la muestra
+suma = 0
+for i in range(x.shape[0]):
+    # 1_sign(w*x_i) != y_i
+    if signo(pesos.dot(np.array([1,x[i,0],x[i,1]]))) != y[i]: suma += 1
+suma /= x.shape[0]
+print(f'Error obtenido: {suma}')
 
 # Random initializations
 print('Algoritmo PLA con vectores aleatorios')
@@ -334,10 +381,17 @@ for i in range(0,10):
     print(f'Pesos iniciales: {wini}')
     print(f'Pesos finales: {pesos}')
     print(f'Iteraciones empleadas: {iters}')
+    
+    # Error de la muestra
+    suma = 0
+    for i in range(x.shape[0]):
+        # 1_sign(w*x_i) != y_i
+        if signo(pesos.dot(np.array([1,x[i,0],x[i,1]]))) != y[i]: suma += 1
+    suma /= x.shape[0]
+    print(f'Error obtenido: {suma}')
     iterations.append(iters)
     
 print('Valor medio de iteraciones necesario para converger: {}'.format(np.mean(np.asarray(iterations))))
-
 input("\n--- Pulsar tecla para continuar ---\n")
 
 # Ahora con los datos del ejercicio 1.2.b
@@ -345,8 +399,15 @@ input("\n--- Pulsar tecla para continuar ---\n")
 #CODIGO DEL ESTUDIANTE
 print('\t***** Ahora con ruido *****')
 print('Algoritmo PLA con vector 0')
-pesos, iters = ajusta_PLA(x, y_ruido, 500_000, np.zeros(3, dtype=int))
-print(pesos, iters, '\n')
+pesos, iters = ajusta_PLA(x, y_ruido, MAX_ITERS, np.zeros(3, dtype=int))
+print(f'Pesos finales: {pesos}')
+print(f'Iteraciones empleadas: {iters}')
+# Error de la muestra
+suma = 0
+for i in range(x.shape[0]):
+    if signo(pesos.dot(np.array([1,x[i,0],x[i,1]]))) != y[i]: suma += 1
+suma /= x.shape[0]
+print(f'Error obtenido: {suma}')
 
 # Random initializations
 print('Algoritmo PLA con vectores aleatorios')
@@ -359,10 +420,17 @@ for i in range(0,10):
     print(f'Pesos iniciales: {wini}')
     print(f'Pesos finales: {pesos}')
     print(f'Iteraciones empleadas: {iters}')
+    
+    # Error de la muestra
+    suma = 0
+    for i in range(x.shape[0]):
+        # 1_sign(w*x_i) != y_i
+        if signo(pesos.dot(np.array([1,x[i,0],x[i,1]]))) != y[i]: suma += 1
+    suma /= x.shape[0]
+    print(f'Error obtenido: {suma}')
     iterations.append(iters)
     
 print('Valor medio de iteraciones necesario para converger: {}'.format(np.mean(np.asarray(iterations))))
-
 input("\n--- Pulsar tecla para continuar ---\n")
 
 ###############################################################################
@@ -371,34 +439,152 @@ input("\n--- Pulsar tecla para continuar ---\n")
 
 # EJERCICIO 3: REGRESIÓN LOGÍSTICA CON STOCHASTIC GRADIENT DESCENT
 
-exit()
-def sgdRL():
+# Funcion sigmoide
+def sigmoide(x):
+    return 1/(1 + np.exp(-x))
+
+# Version binaria del sigmoide
+def clas_sigmoide(X, w):
+    assert w.size == 3
+    p = sigmoide( w[0] + X[:,0]*w[1] + X[:,1]*w[2] )
+    p[p >= 0.5] = 1
+    p[p  < 0.5] = -1
+    return p
+
+# Recta que define la frontera de clasificación dada por nuestra hipótesis
+# generada por la regresión logística
+# (me ha costado mucho caer en hacer esto :') )
+def recta_sigmoide(interv, w):
+    assert w.size == 3
+    return (-w[0] - w[1]*interv)/w[2]
+    
+def sgdRL(datos: np.ndarray, labels: np.ndarray, eta: float, max_t: int, bsize=50):
     #CODIGO DEL ESTUDIANTE
-
-    pass
-
-
+    N = datos.shape[0]
+    assert N == labels.size and bsize <= N
+    datos_ = np.insert(datos, 0, np.ones(N), axis=1)
+    w = np.zeros(datos_.shape[1])
+    w_old = np.inf
+    epoca = 0
+    
+    # https://stackoverflow.com/questions/9171158/how-do-you-get-the-magnitude-of-a-vector-in-numpy
+    while epoca <= max_t and np.linalg.norm(w_old - w) >= 0.01:
+        epoca += 1
+        # Computo del gradiente """""""""""""""""""""""""""""""""""""""""""""""
+        grad = 0
+        for i in np.random.choice(N,bsize,replace=False):
+            num = np.dot(datos_[i], labels[i])                 # Vector
+            den = 1 + np.exp(np.dot(labels[i]*w, datos_[i]))   # Escalar
+            grad = grad + (num / den)                          # Vector/Escalar => Vector
+        grad *= -1 / bsize
+        # Actualizamos pesos """"""""""""""""""""""""""""""""""""""""""""""""""
+        w_old = w.copy()
+        w = w - eta * grad
+    
+    return w, epoca
 
 #CODIGO DEL ESTUDIANTE
+X = [0,2]
+N = 100
+# Generamos la muestra
+x = simula_unif(N, 2, X)
 
+# Coeficientes de la recta
+a, b = simula_recta(X)
 
+# Etiquetas
+y = np.array([f(xi, yi, a, b) for (xi, yi) in x], dtype=int)
+generar_ruido(y, tasa_ruido)
+print(f'Tasa de positivos {y[y==1].size} %')
+print(f'Tasa de negativos {y[y==-1].size} %')
 
+# Puntos para representar la recta en el plot
+plt.scatter(x[:,0], x[:,1], c=y, cmap='coolwarm')
+x_ = np.linspace(X[0]-0.1,X[1]+0.1,N)
+plt.plot(x_, a*x_ + b, 'y--')
+plt.xlim(X[0]-0.1,X[1]+0.1)
+plt.ylim(X[0]-0.1,X[1]+0.1)
+plt.title('Regresión Logística')
+
+print('RL sobre la muestra')
+pesos, t_empleadas = sgdRL(x, y, eta=1.6, max_t=1_000, bsize=80)
+
+plt.plot(x_, recta_sigmoide(x_,pesos), 'g-')
+prediccion = clas_sigmoide(x,pesos)
+plt.scatter(x[:,0], x[:,1], c=clas_sigmoide(x,pesos),marker='+',s=8, cmap='coolwarm')
+plt.show()
+
+suma = 0
+for i in range(N):
+    suma += np.log(1 + np.exp(-y[i]*np.dot(pesos, np.array([1,x[i,0],x[i,1]]))))
+suma /= N
+
+acertados = 0
+for i in range(N):
+    if y[i] == prediccion[i]: acertados += 1
+
+print(f'Pesos: {pesos}')
+print(f'Error cross-entropy: {suma}')
+print(f'Porcentaje de acierto: {acertados}')
+print(f'Epocas empleadas: {t_empleadas}')
+    
 input("\n--- Pulsar tecla para continuar ---\n")
+    
+# Usar la muestra de datos etiquetada para encontrar nuestra solución g y estimar Eout
+# usando para ello un número suficientemente grande de nuevas muestras (>999).
+#CODIGO DEL ESTUDIANTE
+
+suma_error = 0
+suma_clas = 0
+suma_epoca = 0
+Nout = 1200
+for i in range(100):
+    Dout = simula_unif(Nout, 2, X)
+    yout = np.array([f(xi, yi, a, b) for (xi, yi) in Dout], dtype=int)
+    generar_ruido(yout, tasa_ruido)
+    pesos, t_empleadas = sgdRL(Dout, yout, eta=1.6, max_t=1000, bsize=80)
+    predout = clas_sigmoide(Dout, pesos)
+    
+    if i == 0: # Plot solo para la primera ejecución
+        plt.scatter(Dout[:,0], Dout[:,1], c=yout, cmap='coolwarm')
+        plt.plot(x_, a*x_ + b, 'y--')
+        plt.plot(x_, recta_sigmoide(x_,pesos), 'g-')
+        plt.xlim(X[0]-0.1,X[1]+0.1)
+        plt.ylim(X[0]-0.1,X[1]+0.1)
+        plt.title('Regresión Logística (TEST 1)')
+        plt.show()
+        input("\n--- Pulsar tecla para continuar ---\n")
+    
+    # Error test """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+    suma = 0
+    for i in range(Nout):
+        suma += np.log(1 + np.exp(-yout[i]*np.dot(pesos, np.array([1,Dout[i,0],Dout[i,1]]))))
+    suma /= Nout
+    suma_error += suma
+    # Aciertos """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+    suma = 0
+    for i in range(Nout):
+        if yout[i] == predout[i]: suma += 1
+    suma /= Nout
+    suma_clas += suma
+    # Epocas """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+    suma_epoca += t_empleadas
+    
+suma_error /= 100
+suma_clas /= 100
+suma_epoca /= 100
+
+print(f'Eout medio: {suma_error}')
+print(f'Porcentaje de acierto: {suma_clas}')
+print(f'Epocas necesarias para converger: {suma_epoca}')
     
 
 
-# Usar la muestra de datos etiquetada para encontrar nuestra solución g y estimar Eout
-# usando para ello un número suficientemente grande de nuevas muestras (>999).
-
-
-#CODIGO DEL ESTUDIANTE
-
-
 
 
 input("\n--- Pulsar tecla para continuar ---\n")
 
-
+exit()
 ###############################################################################
 ###############################################################################
 ###############################################################################
@@ -461,7 +647,7 @@ input("\n--- Pulsar tecla para continuar ---\n")
 
 
 #POCKET ALGORITHM
-  
+
 #CODIGO DEL ESTUDIANTE
 
 
